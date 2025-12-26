@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Default Light Theme - Clean & Crisp */
+    --color-bg: #F8FAFC;       /* Slate 50 */
+    --color-card: #FFFFFF;     /* White */
+    --color-text: #0F172A;     /* Slate 900 */
+    --color-text-muted: #64748B; /* Slate 500 */
+    --color-acc-primary: #10B981; /* Emerald 500 */
+  }
+
+  .theme-light {
+    --color-bg: #F8FAFC;
+    --color-card: #FFFFFF;
+    --color-text: #0F172A;
+    --color-text-muted: #64748B;
+  }
+
+  .theme-dark {
+    --color-bg: #0B1120;      /* Darker Slate */
+    --color-card: #1E293B;    /* Slate 800 */
+    --color-text: #F1F5F9;    /* Slate 100 */
+    --color-text-muted: #94A3B8; /* Slate 400 */
+  }
+
+  .theme-emerald {
+    --color-bg: #022C22;      /* Emerald 950 */
+    --color-card: #064E3B;    /* Emerald 900 */
+    --color-text: #ECFDF5;    /* Emerald 50 */
+    --color-text-muted: #6EE7B7; /* Emerald 300 */
+  }
+
+  .theme-ocean {
+    --color-bg: #082F49;      /* Sky 950 */
+    --color-card: #0C4A6E;    /* Sky 900 */
+    --color-text: #F0F9FF;    /* Sky 50 */
+    --color-text-muted: #7DD3FC; /* Sky 300 */
+  }
+  
+  .theme-sunset {
+    --color-bg: #FFF7ED;      /* Orange 50 */
+    --color-card: #FFFFFF;    /* White */
+    --color-text: #7C2D12;    /* Orange 900 */
+    --color-text-muted: #C2410C; /* Orange 700 */
+  }
+
+  .theme-lavender {
+    --color-bg: #FAF5FF;      /* Purple 50 */
+    --color-card: #FFFFFF;    /* White */
+    --color-text: #581C87;    /* Purple 900 */
+    --color-text-muted: #9333EA; /* Purple 600 */
+  }
+
+  html {
+    scroll-behavior: smooth;
+    @apply antialiased;
+  }
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    @apply font-sans selection:bg-emerald-500/30 transition-colors duration-500;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/60 backdrop-blur-xl border border-slate-200 shadow-lg;
+  }
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-slate-200 shadow-xl transition-all duration-300;
+  }
+  .glass-active {
+    @apply bg-emerald-50 border-emerald-500/30 shadow-[0_0_15px_rgba(52,211,153,0.2)];
+  }
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600;
+  }
+  .text-gradient-gold {
+     @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500;
+  }
+}
+
+@layer utilities {
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-700/50 rounded-full hover:bg-emerald-500/50 transition-colors;
+}
