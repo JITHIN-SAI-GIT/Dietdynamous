@@ -1,0 +1,36 @@
+services:
+  # Backend Service
+  - type: web
+    name: diet-dinamos-backend
+    env: node
+    root: BACKEND
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: MONGO_URL
+        sync: false
+      - key: SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        sync: false
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: diet-dinamos-frontend
+          property: url
+
+  # Frontend Service
+  - type: web
+    name: diet-dinamos-frontend
+    env: static
+    root: project
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: diet-dinamos-backend
+          property: url
