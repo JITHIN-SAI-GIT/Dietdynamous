@@ -3,7 +3,7 @@ import { Bell } from 'lucide-react';
 import io from 'socket.io-client';
 
 // Initialize socket outside component to prevent multiple connections
-const socket = io('http://localhost:5000', {
+const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
   withCredentials: true,
   autoConnect: false // Connect only when authenticated/mounted
 });
@@ -15,17 +15,17 @@ const NotificationBell = ({ userId }) => {
 
   useEffect(() => {
     if (userId) {
-        socket.connect();
-        
-        socket.on('notification', (notification) => {
-            setNotifications(prev => [notification, ...prev]);
-            setUnreadCount(prev => prev + 1);
-        });
+      socket.connect();
 
-        return () => {
-            socket.off('notification');
-            socket.disconnect();
-        };
+      socket.on('notification', (notification) => {
+        setNotifications(prev => [notification, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      });
+
+      return () => {
+        socket.off('notification');
+        socket.disconnect();
+      };
     }
   }, [userId]);
 
@@ -33,7 +33,7 @@ const NotificationBell = ({ userId }) => {
 
   return (
     <div className="relative">
-      <button 
+      <button
         onClick={toggleDropdown}
         className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
       >
@@ -50,9 +50,9 @@ const NotificationBell = ({ userId }) => {
           <div className="p-3 border-b border-gray-100 dark:border-gray-700 font-semibold flex justify-between items-center text-gray-800 dark:text-white">
             <span>Notifications</span>
             {unreadCount > 0 && (
-                <button className="text-xs text-blue-500 hover:underline" onClick={() => setUnreadCount(0)}>
-                    Mark all read
-                </button>
+              <button className="text-xs text-blue-500 hover:underline" onClick={() => setUnreadCount(0)}>
+                Mark all read
+              </button>
             )}
           </div>
           <div className="max-h-80 overflow-y-auto">
