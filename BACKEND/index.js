@@ -13,84 +13,93 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const { apiLimiter, authLimiter } = require("./middleware/rateLimit");
 
-connectDB();
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    /* ============ MIDDLEWARE ============ */
+    const io = new Server(server, {
+      cors: {
+        origin: process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173",
+        credentials: true,
+      },
+    });
 
-/* ============ MIDDLEWARE ============ */
-const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173",
-    credentials: true,
-  },
-});
+    // Make io accessible globally or pass it via req
+    app.set("io", io);
+    global.io = io; // For Services access
 
-// Make io accessible globally or pass it via req
-app.set("io", io);
-global.io = io; // For Services access
+    app.use(
+      cors({
+        origin: process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173",
+        credentials: true,
+      })
+    );
 
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173",
-    credentials: true,
-  })
-);
+    app.use(express.json());
 
-app.use(express.json());
+    // Rate Limiting
+    app.use("/api/", apiLimiter);
+    app.use("/api/auth", authLimiter);
 
-// Rate Limiting
-app.use("/api/", apiLimiter);
-app.use("/api/auth", authLimiter);
+    /* ============ SESSION ============ */
+    app.use(
+      session({
+        secret: process.env.SECRET || "secretkey",
+        resave: false,
+        saveUninitialized: false,
+        store: MongoStore.create({
+          mongoUrl: process.env.MONGO_URL,
+        }),
+        cookie: {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production", // Set to true in production with HTTPS
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          maxAge: 1000 * 60 * 60 * 24,
+        },
+      })
+    );
 
-/* ============ SESSION ============ */
-app.use(
-  session({
-    secret: process.env.SECRET || "secretkey",
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URL,
-    }),
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Set to true in production with HTTPS
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 1000 * 60 * 60 * 24,
-    },
-  })
-);
+    /* ============ PASSPORT ============ */
+    require("./config/passport")(passport);
+    app.use(passport.initialize());
+    app.use(passport.session());
 
-/* ============ PASSPORT ============ */
-require("./config/passport")(passport);
-app.use(passport.initialize());
-app.use(passport.session());
+    /* ============ SOCKET ============ */
+    io.on("connection", (socket) => {
+      console.log("New client connected", socket.id);
+      
+      if (socket.request.user) {
+          socket.join(socket.request.user._id.toString());
+      }
 
-/* ============ SOCKET ============ */
-io.on("connection", (socket) => {
-  console.log("New client connected", socket.id);
-  
-  if (socket.request.user) {
-      socket.join(socket.request.user._id.toString());
+      socket.on("disconnect", () => {
+        console.log("Client disconnected");
+      });
+    });
+
+    /* ============ ROUTES ============ */
+    app.get("/", (req, res) => {
+      res.send("API is running");
+    });
+
+    app.use("/api/auth", require("./routes/auth"));
+    app.use("/api/user", require("./routes/user"));
+    app.use("/api/chat", require("./routes/chat"));
+    app.use("/api/meals", require("./routes/meals"));
+    app.use("/api/wearables", require("./routes/wearables"));
+    app.use("/api/reminders", require("./routes/reminders"));
+    app.use("/api/admin", require("./routes/admin"));
+
+    /* ============ SERVER ============ */
+    const PORT = process.env.PORT || 5000;
+    server.listen(PORT, () =>
+      console.log(`Server running on http://localhost:${PORT}`)
+    );
+  } catch (err) {
+    console.error("Failed to connect to DB", err);
+    process.exit(1);
   }
+};
 
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
-  });
-});
-
-/* ============ ROUTES ============ */
-app.get("/", (req, res) => {
-  res.send("API is running");
-});
-
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/user", require("./routes/user"));
-app.use("/api/chat", require("./routes/chat"));
-app.use("/api/meals", require("./routes/meals"));
-app.use("/api/wearables", require("./routes/wearables"));
-app.use("/api/reminders", require("./routes/reminders"));
-app.use("/api/admin", require("./routes/admin"));
-
-/* ============ SERVER ============ */
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () =>
-  console.log(`Server running on http://localhost:${PORT}`)
-);
+startServer();
