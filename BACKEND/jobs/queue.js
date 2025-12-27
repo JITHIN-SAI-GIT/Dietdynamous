@@ -1,10 +1,12 @@
 const { Queue } = require('bullmq');
 
-// Simple Redis configuration - fallback to localhost if not provided
-const connection = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379,
-};
+// Redis configuration - support REDIS_URL or host/port
+const connection = process.env.REDIS_URL 
+  ? { url: process.env.REDIS_URL }
+  : {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379,
+    };
 
 // Define Queues
 const notificationQueue = new Queue('notifications', { connection });
